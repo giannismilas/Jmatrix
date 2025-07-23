@@ -1,7 +1,7 @@
-package com.stackpuz.example.service;
+package com.stackpuz.example.backend.service;
 
-import com.stackpuz.example.entity.Product;
-import com.stackpuz.example.repository.ProductRepository;
+import com.stackpuz.example.backend.entity.Product;
+import com.stackpuz.example.backend.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import jakarta.persistence.EntityNotFoundException;

@@ -1,4 +1,4 @@
-package com.stackpuz.example.entity;
+package com.stackpuz.example.backend.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

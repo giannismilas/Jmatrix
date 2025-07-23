@@ -1,7 +1,7 @@
-package com.stackpuz.example.controller;
+package com.stackpuz.example.backend.controller;
 
-import com.stackpuz.example.entity.Product;
-import com.stackpuz.example.service.ProductService;
+import com.stackpuz.example.backend.entity.Product;
+import com.stackpuz.example.backend.service.ProductService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
