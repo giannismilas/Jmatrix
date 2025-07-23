@@ -3,17 +3,16 @@ package com.stackpuz.example.service;
 import com.stackpuz.example.entity.Product;
 import com.stackpuz.example.repository.ProductRepository;
 import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
+import jakarta.persistence.EntityNotFoundException;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepository repository;
-
-    public ProductService(ProductRepository repository) {
-        this.repository = repository;
-    }
 
     public Product saveProduct(Product product) {
         return repository.save(product);
@@ -24,17 +23,22 @@ public class ProductService {
     }
 
     public Product getProductById(int id) {
-        return repository.findById(id).get();
+        return repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + id));
     }
 
     public Product updateProduct(int id, Product product) {
-        Product existing = repository.findById(id).get();
+        Product existing = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + id));
         existing.setName(product.getName());
         existing.setPrice(product.getPrice());
         return repository.save(existing);
     }
 
     public void deleteProduct(int id) {
+        if (!repository.existsById(id)) {
+            throw new EntityNotFoundException("Product not found with id: " + id);
+        }
         repository.deleteById(id);
     }
 
