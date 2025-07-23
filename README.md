@@ -13,7 +13,3 @@
 - Create a new database and run [/database.sql](/database.sql) script to create tables and import data.
 - Edit the database configuration in [/src/main/resources/application.properties](/src/main/resources/application.properties) file.
 
-## Run project
-
-- Run project `mvn spring-boot:run`
-- Navigate to http://localhost:8080
