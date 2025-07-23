@@ -13,3 +13,4 @@
 - Create a new database and run [/database.sql](/database.sql) script to create tables and import data.
 - Edit the database configuration in [/src/main/resources/application.properties](/src/main/resources/application.properties) file.
 
+t
