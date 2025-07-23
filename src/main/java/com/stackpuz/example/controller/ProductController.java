@@ -2,7 +2,6 @@ package com.stackpuz.example.controller;
 
 import com.stackpuz.example.entity.Product;
 import com.stackpuz.example.service.ProductService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,8 +9,11 @@ import java.util.List;
 @RestController
 public class ProductController {
 
-    @Autowired
-    private ProductService service;
+    private final ProductService service;
+
+    public ProductController(ProductService service) {
+        this.service = service;
+    }
 
     @GetMapping("/api/products")
     public List<Product> getProducts() {
@@ -42,5 +44,4 @@ public class ProductController {
     public void deleteAllProducts() {
         service.deleteAllProducts();
     }
-
 }
