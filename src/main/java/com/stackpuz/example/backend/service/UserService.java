@@ -21,14 +21,14 @@ public class UserService implements UserDetailsService {
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        createAdminIfNotExists(); // Add this line to create admin user on startup
+        createAdminIfNotExists();
     }
 
     private void createAdminIfNotExists() {
         if (!usernameExists("admin")) {
             User admin = new User();
             admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("admin")); // Change this password in production
+            admin.setPassword(passwordEncoder.encode("admin"));
             admin.setRole("ROLE_ADMIN");
             userRepository.save(admin);
             log.info("Admin user created");
@@ -48,17 +48,18 @@ public class UserService implements UserDetailsService {
 
     public boolean usernameExists(String username) {
         log.debug("Checking if username exists: {}", username);
-        return userRepository.findByUsername(username) != null;
+        return userRepository.findByUsername(username).isPresent();
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.debug("Attempting to load user by username: {}", username);
-        User user = userRepository.findByUsername(username);
-        if (user == null) {
-            log.debug("User not found with username: {}", username);
-            throw new UsernameNotFoundException("User not found");
-        }
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> {
+                log.debug("User not found with username: {}", username);
+                return new UsernameNotFoundException("User not found");
+            });
+        
         log.debug("User found: {} with role: {}", username, user.getRole());
         String role = user.getRole().replace("ROLE_", "");
         log.debug("Mapped role for Spring Security: {}", role);
@@ -77,7 +78,6 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
         
-        // Prevent deletion of the admin user
         if ("ROLE_ADMIN".equals(user.getRole())) {
             throw new IllegalArgumentException("Cannot delete admin user");
         }

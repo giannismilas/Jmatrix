@@ -34,24 +34,29 @@ public class SecurityConfiguration {
         return templateEngine;
     }
 
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/register", "/css/**", "/js/**", "/login").permitAll()
-                .anyRequest().authenticated()  // Removed specific role requirements as they're now handled by @Secured
-            )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .defaultSuccessUrl("/products", true)
-                .permitAll()
-            )
-            .logout(logout -> logout
-                .logoutSuccessUrl("/login?logout")
-                .permitAll()
-            );
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/register", "/login", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/cart/**").authenticated()
+                        .anyRequest().permitAll()
+                )
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/products", true)
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutSuccessUrl("/login?logout")
+                        .permitAll()
+                );
+
+        http.csrf(csrf -> csrf.disable());
 
         return http.build();
     }
+
+
 }
