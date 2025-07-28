@@ -22,8 +22,14 @@ public class ProductController {
     @GetMapping
     public String getProducts(Model model) {
         List<Product> products = service.getProducts();
+        System.out.println("Number of products retrieved: " + products.size()); // Debug line
+        if (products.isEmpty()) {
+            System.out.println("No products found in database!");
+        } else {
+            products.forEach(p -> System.out.println("Found product: ID=" + p.getId() + ", Name=" + p.getName() + ", Price=" + p.getPrice()));
+        }
         model.addAttribute("products", products);
-        return "products"; // This will look for products.html in src/main/resources/templates/
+        return "products";
     }
 
     @GetMapping("/search")
