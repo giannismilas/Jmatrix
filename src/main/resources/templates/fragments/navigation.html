@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+</head>
+<body>
+    <nav th:fragment="navigation(activeTab)">
+        <a href="/products" th:class="${activeTab == 'products'} ? 'active' : ''">Products</a>
+        <a href="/cart" th:class="${activeTab == 'cart'} ? 'active' : ''">Cart</a>
+        <a href="/orders" th:class="${activeTab == 'orders'} ? 'active' : ''">Orders</a>
+        <form th:action="@{/logout}" method="post" style="float: right;">
+            <button type="submit">Logout</button>
+        </form>
+    </nav>
+</body>
+</html>

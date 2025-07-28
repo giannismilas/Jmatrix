@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Orders</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Orders</h1>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Username</th>
+                    <th>Date</th>
+                    <th>Total Price</th>
+                    <th>Status</th>
+                    <th>Items</th>
+                    <th th:if="${isAdmin}">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="order : ${orders}">
+                    <td th:text="${order.id}">ID</td>
+                    <td th:text="${order.user.username}">Username</td>
+                    <td th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd HH:mm')}">Date</td>
+                    <td th:text="${'$' + #numbers.formatDecimal(order.totalPrice, 1, 2)}">Total</td>
+                    <td>
+                        <span th:if="${!isAdmin}" th:text="${order.status}">Status</span>
+                        <select th:if="${isAdmin}" 
+                                class="form-select"
+                                th:attr="data-order-id=${order.id}"
+                                onchange="updateOrderStatus(this)"
+                                th:value="${order.status}">
+                            <option th:each="status : ${orderStatuses}"
+                                    th:value="${status}"
+                                    th:text="${status}"
+                                    th:selected="${status == order.status}">
+                            </option>
+                        </select>
+                    </td>
+                    <td>
+                        <ul>
+                            <li th:each="item : ${order.items}" 
+                                th:text="${item.product.name + ' x' + item.quantity}">
+                                Item
+                            </li>
+                        </ul>
+                    </td>
+                    <td th:if="${isAdmin}">
+                        <button class="btn btn-danger btn-sm"
+                                th:onclick="'deleteOrder(' + ${order.id} + ')'">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <a href="/products" class="btn btn-primary">Back to Products</a>
+    </div>
+
+    <script>
+    function updateOrderStatus(selectElement) {
+        const orderId = selectElement.getAttribute('data-order-id');
+        const newStatus = selectElement.value;
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+
+        fetch(`/api/orders/${orderId}/status?status=${newStatus}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken || ''
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to update status');
+            return response.json();
+        })
+        .then(() => {
+            alert('Order status updated successfully!');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating order status');
+            location.reload(); // Reload to restore previous state
+        });
+    }
+
+    function deleteOrder(orderId) {
+        if (!confirm('Are you sure you want to delete this order?')) return;
+
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+
+        fetch(`/api/orders/${orderId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken || ''
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to delete order');
+            location.reload(); // Reload to remove the deleted order
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting order');
+        });
+    }
+    </script>
+</body>
+</html>
