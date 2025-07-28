@@ -2,6 +2,7 @@ package com.stackpuz.example.backend.controller;
 
 import com.stackpuz.example.backend.entity.Product;
 import com.stackpuz.example.backend.service.ProductService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,24 @@ public class ProductController {
         List<Product> products = service.getProducts();
         model.addAttribute("products", products);
         return "products"; // This will look for products.html in src/main/resources/templates/
+    }
+
+    @GetMapping("/search")
+    public String searchProductById(@RequestParam(required = false) Integer id, Model model) {
+        if (id == null) {
+            return "redirect:/products";
+        }
+        
+        try {
+            Product product = service.getProductById(id);
+            model.addAttribute("products", List.of(product));
+            model.addAttribute("searchId", id);
+            return "products";
+        } catch (EntityNotFoundException e) {
+            model.addAttribute("products", List.of());
+            model.addAttribute("searchId", id);
+            return "products";
+        }
     }
 
     // API endpoints for CRUD operations
@@ -47,10 +66,5 @@ public class ProductController {
         service.deleteProduct(id);
     }
 
-    @DeleteMapping("/api")
-    @PreAuthorize("hasRole('ADMIN')")
-    @ResponseBody
-    public void deleteAllProducts() {
-        service.deleteAllProducts();
-    }
+
 }

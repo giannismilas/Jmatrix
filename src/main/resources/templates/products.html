@@ -17,6 +17,16 @@
 </head>
 <body>
     <div class="container py-5">
+<!-- Add this navigation section right after the container div opens -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/products">Product Catalog</a>
+        <div class="navbar-nav">
+            <a class="nav-link active" href="/products">Products</a>
+            <a class="nav-link" href="/users" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">Users</a>
+        </div>
+    </div>
+</nav>
         <!-- Debug information -->
         <div class="alert alert-info">
             <p>Debug info:</p>
@@ -35,11 +45,29 @@
             </div>
         </div>
 
-        <!-- Admin Controls -->
-        <div th:if="${#authorization.expression('hasRole(''ADMIN'')')}" class="mb-4">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
-                Add New Product
-            </button>
+        <!-- Search Form and Admin Controls -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <form th:action="@{/products/search}" method="get" class="d-flex">
+                    <input type="number" name="id" class="form-control me-2" 
+                           placeholder="Search by product ID..." 
+                           th:value="${searchId}">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </form>
+            </div>
+            <!-- Admin Controls -->
+            <div class="col-md-6 text-end">
+                <div th:if="${#authorization.expression('hasRole(''ADMIN'')')}" class="mb-4">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                        Add New Product
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Results Message -->
+        <div th:if="${products.empty}" class="alert alert-info">
+            No product found with ID: <span th:text="${searchId}"></span>
         </div>
 
         <!-- Products Grid -->
@@ -54,7 +82,7 @@
                         </p>
                         <!-- Both Admin and User can see the View Details button -->
                         <div class="mt-2">
-                            <button class="btn btn-primary">View Details</button>
+                            <button class="btn btn-primary" th:onclick="'viewProductDetails(' + ${product.id} + ')'">View Details</button>
                         </div>
                         <!-- Admin Only Controls -->
                         <div th:if="${#authorization.expression('hasRole(''ADMIN'')')}" class="mt-2">
@@ -62,6 +90,26 @@
                             <button class="btn btn-danger btn-sm" th:onclick="'deleteProduct(' + ${product.id} + ')'">Delete</button>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Details Modal (for all users) -->
+    <div class="modal fade" id="productDetailsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Product Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h4 id="detailsProductName"></h4>
+                    <p><strong>Price: </strong><span id="detailsProductPrice"></span></p>
+                    <p><strong>ID: </strong><span id="detailsProductId"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -96,5 +144,146 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function viewProductDetails(id) {
+            fetch(`/products/api/${id}`)
+                .then(response => response.json())
+                .then(product => {
+                    document.getElementById('detailsProductName').textContent = product.name;
+                    document.getElementById('detailsProductPrice').textContent = 
+                        '$' + product.price.toFixed(2);
+                    document.getElementById('detailsProductId').textContent = product.id;
+                    
+                    // Show the modal
+                    new bootstrap.Modal(document.getElementById('productDetailsModal')).show();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error loading product details');
+                });
+        }
+    </script>
+    <script>
+    function editProduct(id) {
+        fetch(`/products/api/${id}`)
+            .then(response => response.json())
+            .then(product => {
+                // Populate the add product modal with existing data
+                document.getElementById('productName').value = product.name;
+                document.getElementById('productPrice').value = product.price;
+                
+                // Add the product ID as a data attribute to the form
+                document.getElementById('productForm').setAttribute('data-product-id', id);
+                
+                // Change the save button to update
+                const saveButton = document.querySelector('#addProductModal .btn-primary');
+                saveButton.textContent = 'Update Product';
+                saveButton.onclick = () => updateProduct(id);
+                
+                // Show the modal
+                new bootstrap.Modal(document.getElementById('addProductModal')).show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error loading product details');
+            });
+    }
+
+    function deleteProduct(id) {
+        if (confirm('Are you sure you want to delete this product?')) {
+            fetch(`/products/api/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Reload the page to show updated product list
+                    window.location.reload();
+                } else {
+                    throw new Error('Failed to delete product');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting product');
+            });
+        }
+    }
+
+    function updateProduct(id) {
+        const name = document.getElementById('productName').value;
+        const price = document.getElementById('productPrice').value;
+        
+        if (!name || !price) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        fetch(`/products/api/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                id: id,
+                name: name,
+                price: parseFloat(price)
+            })
+        })
+        .then(response => response.json())
+        .then(() => {
+            // Close the modal and reload the page
+            bootstrap.Modal.getInstance(document.getElementById('addProductModal')).hide();
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating product');
+        });
+    }
+
+    // Modify the existing saveProduct function to reset the form
+    function saveProduct() {
+        const name = document.getElementById('productName').value;
+        const price = document.getElementById('productPrice').value;
+        
+        if (!name || !price) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        fetch('/products/api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: name,
+                price: parseFloat(price)
+            })
+        })
+        .then(response => response.json())
+        .then(() => {
+            // Close the modal and reload the page
+            bootstrap.Modal.getInstance(document.getElementById('addProductModal')).hide();
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error saving product');
+        });
+    }
+
+    // Add event listener to reset the form when the modal is closed
+    document.getElementById('addProductModal').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('productForm').reset();
+        document.getElementById('productForm').removeAttribute('data-product-id');
+        const saveButton = document.querySelector('#addProductModal .btn-primary');
+        saveButton.textContent = 'Save Product';
+        saveButton.onclick = saveProduct;
+    });
+</script>
 </body>
 </html>

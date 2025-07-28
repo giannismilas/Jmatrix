@@ -2,12 +2,15 @@ package com.stackpuz.example.backend.service;
 
 import com.stackpuz.example.backend.entity.User;
 import com.stackpuz.example.backend.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 
 @Service
 @Slf4j
@@ -64,5 +67,22 @@ public class UserService implements UserDetailsService {
                 .password(user.getPassword())
                 .roles(role)
                 .build();
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        
+        // Prevent deletion of the admin user
+        if ("ROLE_ADMIN".equals(user.getRole())) {
+            throw new IllegalArgumentException("Cannot delete admin user");
+        }
+        
+        userRepository.deleteById(id);
+        log.info("User deleted with ID: {}", id);
     }
 }

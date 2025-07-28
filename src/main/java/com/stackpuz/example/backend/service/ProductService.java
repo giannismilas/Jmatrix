@@ -42,7 +42,4 @@ public class ProductService {
         repository.deleteById(id);
     }
 
-    public void deleteAllProducts() {
-        repository.deleteAll();
-    }
 }
