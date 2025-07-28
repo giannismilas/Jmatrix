@@ -5,7 +5,7 @@
     <groupId>com.stackpuz</groupId>
     <artifactId>example-crud</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <n>example-crud</n>
+    <name>example-crud</name>
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -44,6 +44,10 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.thymeleaf.extras</groupId>
+            <artifactId>thymeleaf-extras-springsecurity6</artifactId>
         </dependency>
     </dependencies>
 
