@@ -40,8 +40,7 @@ public class SecurityConfiguration {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/register", "/css/**", "/js/**", "/login").permitAll()
-                .requestMatchers("/products/api/**").hasRole("ADMIN")
-                .anyRequest().authenticated()
+                .anyRequest().authenticated()  // Removed specific role requirements as they're now handled by @Secured
             )
             .formLogin(form -> form
                 .loginPage("/login")

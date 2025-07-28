@@ -6,12 +6,12 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.annotation.Secured;
 
 import java.util.List;
 
 @Controller
-@RequestMapping("/products") // Change this from /api/products
+@RequestMapping("/products")
 public class ProductController {
     private final ProductService service;
 
@@ -20,19 +20,15 @@ public class ProductController {
     }
 
     @GetMapping
+    @Secured({"ROLE_ADMIN", "ROLE_VIEWER"})  // Allow both ADMIN and VIEWER roles
     public String getProducts(Model model) {
         List<Product> products = service.getProducts();
-        System.out.println("Number of products retrieved: " + products.size()); // Debug line
-        if (products.isEmpty()) {
-            System.out.println("No products found in database!");
-        } else {
-            products.forEach(p -> System.out.println("Found product: ID=" + p.getId() + ", Name=" + p.getName() + ", Price=" + p.getPrice()));
-        }
         model.addAttribute("products", products);
         return "products";
     }
 
     @GetMapping("/search")
+    @Secured({"ROLE_ADMIN", "ROLE_VIEWER"})  // Allow both roles
     public String searchProductById(@RequestParam(required = false) Integer id, Model model) {
         if (id == null) {
             return "redirect:/products";
@@ -50,27 +46,24 @@ public class ProductController {
         }
     }
 
-    // API endpoints for CRUD operations
     @PostMapping("/api")
-    @PreAuthorize("hasRole('ADMIN')")
+    @Secured("ROLE_ADMIN")  // Only ADMIN can create
     @ResponseBody
     public Product createProduct(@RequestBody Product product) {
         return service.saveProduct(product);
     }
 
     @PutMapping("/api/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @Secured("ROLE_ADMIN")  // Only ADMIN can update
     @ResponseBody
     public Product updateProduct(@PathVariable int id, @RequestBody Product product) {
         return service.updateProduct(id, product);
     }
 
     @DeleteMapping("/api/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @Secured("ROLE_ADMIN")  // Only ADMIN can delete
     @ResponseBody
     public void deleteProduct(@PathVariable int id) {
         service.deleteProduct(id);
     }
-
-
 }
