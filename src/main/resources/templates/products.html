@@ -18,22 +18,23 @@
 </head>
 <body>
     <div class="container py-5">
-<!-- Add this navigation section right after the container div opens -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
     <div class="container-fluid">
         <a class="navbar-brand" href="/products">Product Catalog</a>
         <div class="navbar-nav">
-            <a class="nav-link active" href="/products">Products</a>
             <a class="nav-link" href="/users" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">Users</a>
         </div>
-<div class="navbar-nav ms-auto">
-    <a class="nav-link" href="/cart" sec:authorize="isAuthenticated() && !hasRole('ADMIN')">
-        <i class="bi bi-cart"></i> Cart
-    </a>
-    <a class="nav-link" href="/orders" sec:authorize="isAuthenticated()">
-        <i class="bi bi-box"></i> Orders
-    </a>
-</div>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="/cart" sec:authorize="isAuthenticated() && !hasRole('ADMIN')">
+                <i class="bi bi-cart"></i> Cart
+            </a>
+            <a class="nav-link" href="/orders" sec:authorize="isAuthenticated()">
+                <i class="bi bi-box"></i> Orders
+            </a>
+            <a class="nav-link" href="/profile" sec:authorize="isAuthenticated()">
+                <i class="bi bi-person"></i> Profile
+            </a>
+        </div>
     </div>
 </nav>
         <!-- Debug information -->

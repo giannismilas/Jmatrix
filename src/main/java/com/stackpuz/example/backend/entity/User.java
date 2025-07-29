@@ -1,24 +1,31 @@
 package com.stackpuz.example.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Data;
 
 @Entity
-@Table(name = "users")
-@Getter
-@Setter
-@NoArgsConstructor
+@Data
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String username;
     
+    @Column(nullable = false)
     private String password;
     
-    private String role = "ROLE_USER"; // Default role for customers
+    private String role;
+    
+    // New fields for profile
+    private String fullName;
+    private String address;
+    private String phone;
+    
+    @Column(columnDefinition = "TEXT")
+    private String bio;
+    
+    @Column(name = "email")
+    private String email;
 }
