@@ -37,14 +37,6 @@
         </div>
     </div>
 </nav>
-        <!-- Debug information -->
-        <div class="alert alert-info">
-            <p>Debug info:</p>
-            <p>Username: <span sec:authentication="name">Username</span></p>
-            <p>Roles: <span sec:authentication="principal.authorities">Roles</span></p>
-            <p>Is Admin: <span th:text="${#authorization.expression('hasRole(''ADMIN'')')}">false</span></p>
-        </div>
-
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>Our Products</h1>
             <div sec:authorize="isAuthenticated()">
