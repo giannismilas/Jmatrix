@@ -21,7 +21,7 @@ A Spring Boot-based e-commerce platform with full shopping functionality includi
 
 ## 🧾 Overview
 
-The EShop Application is a full-featured e-commerce platform designed using Spring Boot. It allows users to browse products, manage shopping carts, place orders, and administrators to manage users and products.
+The EShop Application is a full-featured e-commerce platform designed using Spring Boot. It allows customers to browse products, manage shopping carts, place orders, and administrators to manage users and products.
 
 ---
 
@@ -121,7 +121,7 @@ The EShop Application is a full-featured e-commerce platform designed using Spri
 
 ## 🧩 Database Schema
 
-> *(Insert Database Diagram Image Here)*
+There is a test database.sql file that imports some products that were used for testing purposes.
 
 ### Key Entities:
 - **User** – Stores user credentials and profile info
