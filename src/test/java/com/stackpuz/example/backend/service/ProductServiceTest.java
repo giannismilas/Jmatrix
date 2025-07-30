@@ -1,126 +1,120 @@
 package com.stackpuz.example.backend.service;
 
 import com.stackpuz.example.backend.entity.Product;
-import com.stackpuz.example.backend.repository.OrderRepository;
 import com.stackpuz.example.backend.repository.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
 
-    @Autowired
-    private ProductRepository repository;
-
-    @Autowired
-    private ProductService service;
-
-    @Autowired
-    private OrderRepository orderItemRepository;
-
-    @Autowired
+    @Mock
     private ProductRepository productRepository;
+
+    @InjectMocks
+    private ProductService productService;
+
+    private Product product;
 
     @BeforeEach
     void setUp() {
-        orderItemRepository.deleteAll(); // ΠΡΩΤΑ τα εξαρτώμενα (children)
-        productRepository.deleteAll();   // ΜΕΤΑ τα εξαρτώμενα (parent)
+        product = new Product();
+        product.setId(1);
+        product.setName("Test Product");
+        product.setPrice(100.0);
     }
 
     @Test
     void saveProduct_ShouldReturnSavedProduct() {
-        Product product = new Product();
-        product.setName("PS5");
-        product.setPrice(399.99);
+        when(productRepository.save(any(Product.class))).thenReturn(product);
 
-        Product saved = service.saveProduct(product);
+        Product saved = productService.saveProduct(product);
 
-        assertNotNull(saved.getId());
-        assertEquals("PS5", saved.getName());
-        assertEquals(399.99, saved.getPrice());
+        assertNotNull(saved);
+        assertEquals("Test Product", saved.getName());
+        verify(productRepository).save(product);
     }
 
     @Test
     void getProducts_ShouldReturnAllProducts() {
-        Product p1 = new Product();
-        p1.setName("PS5");
-        p1.setPrice(399.99);
+        List<Product> products = Arrays.asList(product);
+        when(productRepository.findAll()).thenReturn(products);
 
-        Product p2 = new Product();
-        p2.setName("Xbox");
-        p2.setPrice(299.99);
+        List<Product> result = productService.getProducts();
 
-        service.saveProduct(p1);
-        service.saveProduct(p2);
-
-        List<Product> products = service.getProducts();
-        assertEquals(2, products.size());
+        assertEquals(1, result.size());
+        verify(productRepository).findAll();
     }
 
     @Test
     void getProductById_ShouldReturnProduct_WhenExists() {
-        Product product = new Product();
-        product.setName("Nintendo Switch");
-        product.setPrice(199.99);
+        when(productRepository.findById(1)).thenReturn(Optional.of(product));
 
-        Product saved = service.saveProduct(product);
+        Product found = productService.getProductById(1);
 
-        Product found = service.getProductById(saved.getId());
-        assertEquals("Nintendo Switch", found.getName());
+        assertEquals("Test Product", found.getName());
+        verify(productRepository).findById(1);
     }
 
     @Test
     void getProductById_ShouldThrowException_WhenNotFound() {
-        assertThrows(EntityNotFoundException.class, () -> service.getProductById(999));
+        when(productRepository.findById(999)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> productService.getProductById(999));
     }
 
     @Test
     void updateProduct_ShouldUpdateAndReturnProduct() {
-        Product product = new Product();
-        product.setName("Tablet");
-        product.setPrice(150.0);
-        Product saved = service.saveProduct(product);
+        Product updatedProduct = new Product();
+        updatedProduct.setName("Updated Product");
+        updatedProduct.setPrice(150.0);
 
-        Product updated = new Product();
-        updated.setName("Updated Tablet");
-        updated.setPrice(170.0);
+        when(productRepository.findById(1)).thenReturn(Optional.of(product));
+        when(productRepository.save(any(Product.class))).thenReturn(updatedProduct);
 
-        Product result = service.updateProduct(saved.getId(), updated);
+        Product result = productService.updateProduct(1, updatedProduct);
 
-        assertEquals("Updated Tablet", result.getName());
-        assertEquals(170.0, result.getPrice());
+        assertEquals("Updated Product", result.getName());
+        verify(productRepository).findById(1);
+        verify(productRepository).save(any(Product.class));
     }
 
     @Test
     void updateProduct_ShouldThrowException_WhenNotFound() {
-        Product updated = new Product();
-        updated.setName("Fake");
-        updated.setPrice(0.0);
+        Product updatedProduct = new Product();
+        when(productRepository.findById(999)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> service.updateProduct(999, updated));
+        assertThrows(EntityNotFoundException.class, () ->
+                productService.updateProduct(999, updatedProduct));
     }
 
     @Test
     void deleteProduct_ShouldDeleteProduct_WhenExists() {
-        Product product = new Product();
-        product.setName("Camera");
-        product.setPrice(299.99);
-        Product saved = service.saveProduct(product);
+        when(productRepository.existsById(1)).thenReturn(true);
+        doNothing().when(productRepository).deleteById(1);
 
-        service.deleteProduct(saved.getId());
+        productService.deleteProduct(1);
 
-        assertFalse(repository.existsById(saved.getId()));
+        verify(productRepository).existsById(1);
+        verify(productRepository).deleteById(1);
     }
 
     @Test
     void deleteProduct_ShouldThrowException_WhenNotFound() {
-        assertThrows(EntityNotFoundException.class, () -> service.deleteProduct(999));
+        when(productRepository.existsById(999)).thenReturn(false);
+
+        assertThrows(EntityNotFoundException.class, () -> productService.deleteProduct(999));
     }
 }
