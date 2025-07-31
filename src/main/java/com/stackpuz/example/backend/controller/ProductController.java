@@ -27,25 +27,6 @@ public class ProductController {
         return "products";
     }
 
-    @GetMapping("/search")
-    @Secured({"ROLE_ADMIN", "ROLE_VIEWER"})  // Allow both roles
-    public String searchProductById(@RequestParam(required = false) Integer id, Model model) {
-        if (id == null) {
-            return "redirect:/products";
-        }
-        
-        try {
-            Product product = service.getProductById(id);
-            model.addAttribute("products", List.of(product));
-            model.addAttribute("searchId", id);
-            return "products";
-        } catch (EntityNotFoundException e) {
-            model.addAttribute("products", List.of());
-            model.addAttribute("searchId", id);
-            return "products";
-        }
-    }
-
     @PostMapping("/api")
     @Secured("ROLE_ADMIN")  // Only ADMIN can create
     @ResponseBody
@@ -65,5 +46,31 @@ public class ProductController {
     @ResponseBody
     public void deleteProduct(@PathVariable int id) {
         service.deleteProduct(id);
+    }
+
+    @GetMapping("/search")
+    @Secured({"ROLE_ADMIN", "ROLE_VIEWER"})
+    public String searchProducts(
+            @RequestParam(required = false) String query,
+            Model model) {
+
+        if (query == null || query.trim().isEmpty()) {
+            return "redirect:/products";
+        }
+
+        List<Product> products;
+        try {
+            // Try to parse as ID first
+            int id = Integer.parseInt(query);
+            products = List.of(service.getProductById(id));
+            model.addAttribute("searchId", id);
+        } catch (NumberFormatException | EntityNotFoundException e) {
+            // If not a number or no product with that ID, search by name
+            products = service.searchProductsByName(query);
+            model.addAttribute("searchName", query);
+        }
+
+        model.addAttribute("products", products);
+        return "products";
     }
 }

@@ -42,4 +42,8 @@ public class ProductService {
         repository.deleteById(id);
     }
 
+    public List<Product> searchProductsByName(String name) {
+        return repository.findByNameContainingIgnoreCase(name);
+    }
+
 }

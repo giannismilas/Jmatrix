@@ -62,43 +62,95 @@ class ProductControllerTest {
     }
 
     @Test
-    void searchProductById_WithValidId_ShouldReturnProductsViewWithSingleProduct() {
+    void searchProducts_WithNumericQuery_ShouldSearchById() {
         // Arrange
+        String query = "1";
         when(productService.getProductById(1)).thenReturn(product1);
 
         // Act
-        String viewName = productController.searchProductById(1, model);
+        String viewName = productController.searchProducts(query, model);
 
         // Assert
         assertEquals("products", viewName);
+        verify(productService).getProductById(1);
+        verify(productService, never()).searchProductsByName(anyString());
         verify(model).addAttribute("products", Collections.singletonList(product1));
         verify(model).addAttribute("searchId", 1);
-        verify(productService).getProductById(1);
+        verify(model, never()).addAttribute(eq("searchName"), anyString());
     }
 
     @Test
-    void searchProductById_WithInvalidId_ShouldReturnProductsViewWithEmptyList() {
+    void searchProducts_WithNumericQueryButInvalidId_ShouldSearchByName() {
         // Arrange
-        when(productService.getProductById(99)).thenThrow(new EntityNotFoundException());
+        String query = "999";
+        when(productService.getProductById(999)).thenThrow(new EntityNotFoundException());
+        when(productService.searchProductsByName(query)).thenReturn(Collections.emptyList());
 
         // Act
-        String viewName = productController.searchProductById(99, model);
+        String viewName = productController.searchProducts(query, model);
 
         // Assert
         assertEquals("products", viewName);
+        verify(productService).getProductById(999);
+        verify(productService).searchProductsByName(query);
         verify(model).addAttribute("products", Collections.emptyList());
-        verify(model).addAttribute("searchId", 99);
-        verify(productService).getProductById(99);
+        verify(model).addAttribute("searchName", query);
+        verify(model, never()).addAttribute(eq("searchId"), anyInt());
     }
 
     @Test
-    void searchProductById_WithNullId_ShouldRedirectToProducts() {
+    void searchProducts_WithTextQuery_ShouldSearchByName() {
+        // Arrange
+        String query = "lap";
+        when(productService.searchProductsByName(query)).thenReturn(Collections.singletonList(product1));
+
         // Act
-        String viewName = productController.searchProductById(null, model);
+        String viewName = productController.searchProducts(query, model);
+
+        // Assert
+        assertEquals("products", viewName);
+        verify(productService, never()).getProductById(anyInt());
+        verify(productService).searchProductsByName(query);
+        verify(model).addAttribute("products", Collections.singletonList(product1));
+        verify(model).addAttribute("searchName", query);
+        verify(model, never()).addAttribute(eq("searchId"), anyInt());
+    }
+
+    @Test
+    void searchProducts_WithEmptyQuery_ShouldRedirectToProducts() {
+        // Act
+        String viewName = productController.searchProducts("", model);
 
         // Assert
         assertEquals("redirect:/products", viewName);
         verifyNoInteractions(productService);
+    }
+
+    @Test
+    void searchProducts_WithNullQuery_ShouldRedirectToProducts() {
+        // Act
+        String viewName = productController.searchProducts(null, model);
+
+        // Assert
+        assertEquals("redirect:/products", viewName);
+        verifyNoInteractions(productService);
+    }
+
+    @Test
+    void searchProducts_WithNonNumericQuery_ShouldSearchByName() {
+        // Arrange
+        String query = "laptop";
+        when(productService.searchProductsByName(query)).thenReturn(Collections.singletonList(product1));
+
+        // Act
+        String viewName = productController.searchProducts(query, model);
+
+        // Assert
+        assertEquals("products", viewName);
+        verify(productService, never()).getProductById(anyInt());
+        verify(productService).searchProductsByName(query);
+        verify(model).addAttribute("products", Collections.singletonList(product1));
+        verify(model).addAttribute("searchName", query);
     }
 
     @Test
