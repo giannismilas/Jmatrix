@@ -241,7 +241,6 @@ All errors provide clear, user-friendly feedback on the UI.
 
 ### 🌟 Advanced Features
 - Product reviews and ratings
-- Wishlists and favorites
 - Discount code system
 
 ### 🎨 UI Improvements
