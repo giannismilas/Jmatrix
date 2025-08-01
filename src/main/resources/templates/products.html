@@ -144,6 +144,9 @@
                     </a>
                 </div>
                 <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="/wishlist" sec:authorize="isAuthenticated() && !hasRole('ADMIN')">
+                        <i class="bi bi-heart me-1"></i>Wishlist
+                    </a>
                     <a class="nav-link" href="/cart" sec:authorize="isAuthenticated() && !hasRole('ADMIN')">
                         <i class="bi bi-cart me-1"></i>Cart
                     </a>
@@ -208,8 +211,11 @@
                             </button>
                         </div>
                         <div class="mt-2" sec:authorize="isAuthenticated() && !hasRole('ADMIN')">
-                            <button class="btn btn-success btn-sm" th:onclick="'addToCart(' + ${product.id} + ')'">
+                            <button class="btn btn-success btn-sm me-2" th:onclick="'addToCart(' + ${product.id} + ')'">
                                 <i class="bi bi-cart-plus me-1"></i>Add to Cart
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" th:onclick="'addToWishlist(' + ${product.id} + ')'">
+                                <i class="bi bi-heart me-1"></i>Add to Wishlist
                             </button>
                         </div>
                         <div th:if="${#authorization.expression('hasRole(''ADMIN'')')}" class="mt-2">
@@ -432,6 +438,38 @@
                 }
             });
         }
+
+        function addToWishlist(productId) {
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+            fetch(`/wishlist/add/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || ''
+                },
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            window.location.href = '/login';
+                            throw new Error('Please login first');
+                        }
+                        return response.text().then(text => { throw new Error(text) });
+                    }
+                    return response.text();
+                })
+                .then(message => {
+                    alert(message);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    if (error.message !== 'Please login first') {
+                        alert(error.message || 'Failed to add product to wishlist');
+                    }
+                });
+        }
+
 
         // Add event listener to reset the form when the modal is closed
         document.getElementById('addProductModal').addEventListener('hidden.bs.modal', function () {
