@@ -1,6 +1,6 @@
 # EShop Application
 
-A Spring Boot-based e-commerce platform with full shopping functionality including user authentication, product management, cart system, and order processing. Supports two user roles: **regular users** and **administrators**.
+A Spring Boot-based e-commerce platform with full shopping functionality including user authentication, product management, cart system, and order processing. Supports two user roles: **regular customers** and **administrators**.
 
 ---
 
