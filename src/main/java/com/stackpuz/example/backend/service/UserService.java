@@ -3,9 +3,11 @@ package com.stackpuz.example.backend.service;
 import com.stackpuz.example.backend.entity.Cart;
 import com.stackpuz.example.backend.entity.Order;
 import com.stackpuz.example.backend.entity.User;
+import com.stackpuz.example.backend.entity.Wishlist;
 import com.stackpuz.example.backend.repository.CartRepository;
 import com.stackpuz.example.backend.repository.OrderRepository;
 import com.stackpuz.example.backend.repository.UserRepository;
+import com.stackpuz.example.backend.repository.WishlistRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,15 +29,18 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository; // Add this
+    private final WishlistRepository wishlistRepository;
 
     public UserService(UserRepository userRepository, 
                       PasswordEncoder passwordEncoder,
                       OrderRepository orderRepository,
-                      CartRepository cartRepository) { // Add parameter
+                      CartRepository cartRepository,
+                      WishlistRepository wishlistRepository) { // Add parameter
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository; // Add assignment
+        this.wishlistRepository = wishlistRepository;
         createAdminIfNotExists();
     }
 
@@ -133,6 +138,12 @@ public long getUserOrderCount(Long userId) {
         Cart userCart = cartRepository.findByUser(user).orElse(null);
         if (userCart != null) {
             cartRepository.delete(userCart);
+        }
+
+        // Delete user's wishlist if it exists (to satisfy FK constraints)
+        Wishlist wishlist = wishlistRepository.findByUser(user).orElse(null);
+        if (wishlist != null) {
+            wishlistRepository.delete(wishlist);
         }
 
         userRepository.deleteById(id);
