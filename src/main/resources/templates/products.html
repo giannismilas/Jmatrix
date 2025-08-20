@@ -449,6 +449,15 @@
                                 </div>
                             </div>`;
                         list.appendChild(li);
+                        // If this is my review, show Delete control on the right
+                        if (item.mine) {
+                            const controls = document.createElement('div');
+                            controls.innerHTML = `<button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash me-1"></i>Delete</button>`;
+                            const btn = controls.querySelector('button');
+                            btn.onclick = () => deleteMyReview(item.id, productId);
+                            const row = li.querySelector('.d-flex');
+                            if (row) row.appendChild(controls);
+                        }
                         if (item.mine) {
                             myReview = item;
                         }
@@ -508,6 +517,32 @@
                         return;
                     }
                     alert(err.message || 'Failed to submit review');
+                });
+        }
+
+        // Delete my own review
+        function deleteMyReview(reviewId, productId) {
+            if (!confirm('Delete your review?')) return;
+            fetch(`/reviews/api/${reviewId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            })
+                .then(async res => {
+                    if (!res.ok) {
+                        const t = await res.text();
+                        throw new Error(t || 'Failed to delete review');
+                    }
+                })
+                .then(() => {
+                    loadReviews(productId);
+                    updateInlineRating(productId);
+                })
+                .catch(err => {
+                    if (err && err.message && err.message.toLowerCase().includes('login')) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    alert(err.message || 'Failed to delete review');
                 });
         }
 
