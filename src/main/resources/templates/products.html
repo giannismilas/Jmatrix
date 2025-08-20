@@ -403,13 +403,21 @@
         }
 
         // Add event listener to reset the form when the modal is closed
-        document.getElementById('addProductModal').addEventListener('hidden.bs.modal', function () {
-            document.getElementById('productForm').reset();
-            document.getElementById('productForm').removeAttribute('data-product-id');
-            const saveButton = document.querySelector('#addProductModal .btn-primary');
-            saveButton.textContent = 'Save Product';
-            saveButton.onclick = saveProduct;
-        });
+        const addProductModalEl = document.getElementById('addProductModal');
+        if (addProductModalEl) {
+            addProductModalEl.addEventListener('hidden.bs.modal', function () {
+                const form = document.getElementById('productForm');
+                if (form) {
+                    form.reset();
+                    form.removeAttribute('data-product-id');
+                }
+                const saveButton = document.querySelector('#addProductModal .btn-primary');
+                if (saveButton) {
+                    saveButton.textContent = 'Save Product';
+                    saveButton.onclick = saveProduct;
+                }
+            });
+        }
 
         // ---- Reviews ----
         function renderStars(n) {
