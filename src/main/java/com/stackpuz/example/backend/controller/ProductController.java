@@ -27,6 +27,13 @@ public class ProductController {
         return "products";
     }
 
+    // Provide API endpoint to fetch a product by ID for client-side modal usage
+    @GetMapping("/api/{id}")
+    @ResponseBody
+    public Product getProductByIdApi(@PathVariable int id) {
+        return service.getProductById(id);
+    }
+
     @PostMapping("/api")
     @Secured("ROLE_ADMIN")  // Only ADMIN can create
     @ResponseBody

@@ -86,7 +86,12 @@
             <div th:each="product : ${products}" class="col-md-4">
                 <div class="card product-card">
                     <div class="card-body">
-                        <h5 class="card-title" th:text="${product.name}">Product Name</h5>
+                        <h5 class="card-title">
+                            <span th:text="${product.name}">Product Name</span>
+                            <small class="text-muted ms-2">
+                                <span class="rating-inline" th:attr="data-product-id=${product.id}">Loading...</span>
+                            </small>
+                        </h5>
                         <p class="card-text">
                             <span class="price-tag" th:text="${'$' + #numbers.formatDecimal(product.price, 1, 2)}">$0.00</span>
                         </p>
@@ -129,6 +134,45 @@
                     <h4 id="detailsProductName"></h4>
                     <p><strong>Price: </strong><span id="detailsProductPrice"></span></p>
                     <p><strong>ID: </strong><span id="detailsProductId"></span></p>
+
+                    <hr/>
+                    <div id="reviewsSection">
+                        <div class="d-flex align-items-center mb-2">
+                            <strong class="me-2">Average Rating:</strong>
+                            <span id="avgRating">-</span>
+                            <span class="text-muted ms-2" id="reviewCount">(0 reviews)</span>
+                        </div>
+
+                        <ul class="list-group mb-3" id="reviewsList">
+                            <!-- Reviews will be injected here -->
+                        </ul>
+
+                        <div sec:authorize="isAuthenticated() && !hasRole('ADMIN')">
+                            <h6 class="mb-2">Your Review</h6>
+                            <form id="reviewForm" onsubmit="return false;">
+                                <div class="mb-2">
+                                    <label for="reviewRating" class="form-label">Rating</label>
+                                    <select id="reviewRating" class="form-select" required>
+                                        <option value="">Select...</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <label for="reviewComment" class="form-label">Comment (optional)</label>
+                                    <textarea id="reviewComment" class="form-control" rows="3"></textarea>
+                                </div>
+                                <button type="button" class="btn btn-primary" id="submitReviewBtn">Submit Review</button>
+                            </form>
+                        </div>
+                        <div sec:authorize="hasRole('ADMIN')" class="alert alert-info">
+                            Admins can view reviews only.
+                        </div>
+                    </div>
+                    
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -178,6 +222,9 @@
                     
                     // Show the modal
                     new bootstrap.Modal(document.getElementById('productDetailsModal')).show();
+
+                    // Load reviews for this product
+                    loadReviews(product.id);
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -355,7 +402,6 @@
                 });
         }
 
-
         // Add event listener to reset the form when the modal is closed
         document.getElementById('addProductModal').addEventListener('hidden.bs.modal', function () {
             document.getElementById('productForm').reset();
@@ -364,6 +410,120 @@
             saveButton.textContent = 'Save Product';
             saveButton.onclick = saveProduct;
         });
+
+        // ---- Reviews ----
+        function renderStars(n) {
+            const full = '★'.repeat(n);
+            const empty = '☆'.repeat(5 - n);
+            return `<span class="text-warning">${full}</span><span class="text-muted">${empty}</span>`;
+        }
+
+        function loadReviews(productId) {
+            fetch(`/reviews/api/product/${productId}`)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('avgRating').innerHTML = `${renderStars(Math.round(data.average))} <span class="ms-1">${data.average.toFixed(1)}/5</span>`;
+                    document.getElementById('reviewCount').textContent = `(${data.count} review${data.count === 1 ? '' : 's'})`;
+
+                    const list = document.getElementById('reviewsList');
+                    list.innerHTML = '';
+
+                    let myReview = null;
+                    data.items.forEach(item => {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div>${renderStars(item.rating)} <strong class="ms-2">${item.username}</strong></div>
+                                    <div class="text-muted small">${new Date(item.createdAt).toLocaleString()}</div>
+                                    <div class="mt-1">${item.comment ? item.comment.replace(/</g,'&lt;') : ''}</div>
+                                </div>
+                            </div>`;
+                        list.appendChild(li);
+                        if (item.mine) {
+                            myReview = item;
+                        }
+                    });
+
+                    // Pre-fill form for my review if exists
+                    const ratingSel = document.getElementById('reviewRating');
+                    const commentInput = document.getElementById('reviewComment');
+                    if (ratingSel && commentInput) {
+                        if (myReview) {
+                            ratingSel.value = String(myReview.rating);
+                            commentInput.value = myReview.comment || '';
+                        } else {
+                            ratingSel.value = '';
+                            commentInput.value = '';
+                        }
+                        const submitBtn = document.getElementById('submitReviewBtn');
+                        submitBtn.onclick = () => submitReview(productId);
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to load reviews', err);
+                });
+        }
+
+        function submitReview(productId) {
+            const rating = parseInt(document.getElementById('reviewRating').value, 10);
+            const comment = document.getElementById('reviewComment').value;
+            if (!rating || rating < 1 || rating > 5) {
+                alert('Please choose a rating between 1 and 5');
+                return;
+            }
+            const params = new URLSearchParams();
+            params.append('rating', rating);
+            if (comment) params.append('comment', comment);
+            fetch(`/reviews/api/product/${productId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString(),
+                credentials: 'include'
+            })
+                .then(async res => {
+                    if (!res.ok) {
+                        const t = await res.text();
+                        throw new Error(t || 'Failed to submit review');
+                    }
+                    return res.text();
+                })
+                .then(() => {
+                    loadReviews(productId);
+                    // refresh the inline rating on the card
+                    updateInlineRating(productId);
+                })
+                .catch(err => {
+                    if (err && err.message && err.message.toLowerCase().includes('login')) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    alert(err.message || 'Failed to submit review');
+                });
+        }
+
+        // Populate rating next to product names in the grid
+        function updateInlineRating(productId) {
+            const el = document.querySelector(`.rating-inline[data-product-id="${productId}"]`);
+            if (!el) return;
+            fetch(`/reviews/api/product/${productId}`)
+                .then(r => r.json())
+                .then(data => {
+                    el.innerHTML = `${renderStars(Math.round(data.average))} <span class="ms-1">(${data.count})</span>`;
+                })
+                .catch(() => { el.textContent = '(no reviews)'; });
+        }
+
+        function loadAllInlineRatings() {
+            document.querySelectorAll('.rating-inline').forEach(el => {
+                const id = el.getAttribute('data-product-id');
+                updateInlineRating(id);
+            });
+        }
+
+        // Load inline ratings when the page is ready
+        document.addEventListener('DOMContentLoaded', loadAllInlineRatings);
     </script>
 </body>
 </html>

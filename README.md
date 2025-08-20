@@ -37,6 +37,12 @@ The EShop Application is a full-featured e-commerce platform designed using Spri
 - Search products by ID
 - Admin-only access for modifications
 
+### ⭐ Product Reviews & Ratings
+- Users can add, edit, and delete their own review per product (rating 1–5 and optional comment)
+- Admins have read-only access (cannot create, edit, or delete reviews)
+- Average rating and total review count shown next to product names in the grid and inside the product modal
+- Reviews list displayed in the product modal; form visible only to authenticated non-admin users
+
 ### 🛒 Shopping Cart
 - Add and remove products
 - Manage product quantities
@@ -129,6 +135,7 @@ There is a test database.sql file that imports some products that were used for 
 - **Cart** – User’s active shopping cart
 - **Order** – Records completed orders
 - **CartItem / OrderItem** – Itemized product references in carts and orders
+- **Review** – User review for a product with fields: rating (1–5), comment, timestamps; unique constraint `(user_id, product_id)` ensures 1 review per user per product
 
 ---
 
@@ -149,9 +156,19 @@ There is a test database.sql file that imports some products that were used for 
 |--------|------------------------|-----------------------|--------------|
 | GET    | `/products`            | View all products     | USER, ADMIN  |
 | GET    | `/products/search`     | Search by product ID  | USER, ADMIN  |
+| GET    | `/products/api/{id}`   | Get product by ID     | USER, ADMIN  |
 | POST   | `/products/api`        | Create product        | ADMIN only   |
 | PUT    | `/products/api/{id}`   | Update product        | ADMIN only   |
 | DELETE | `/products/api/{id}`   | Delete product        | ADMIN only   |
+
+### 🌟 Reviews & Ratings
+
+| Method | Endpoint                         | Description                                  | Access        |
+|--------|-----------------------------------|----------------------------------------------|---------------|
+| GET    | `/reviews/api/product/{id}`       | List reviews for a product + avg + count     | USER, ADMIN   |
+| POST   | `/reviews/api/product/{id}`       | Add or update current user's review          | USER only     |
+| PUT    | `/reviews/api/{reviewId}`         | Update own review by id                      | USER only     |
+| DELETE | `/reviews/api/{reviewId}`         | Delete own review by id                      | USER only     |
 
 ### 🛒 Cart
 
@@ -181,6 +198,7 @@ There is a test database.sql file that imports some products that were used for 
     - `ROLE_USER` – Shopping and profile access
 - **Restrictions:**
     - Admins cannot use the shopping cart
+    - Admins cannot create, edit, or delete reviews (read-only)
     - Users cannot modify products
     - All endpoints are secured appropriately
 
@@ -194,6 +212,11 @@ There is a test database.sql file that imports some products that were used for 
     - Product grid with search
     - Admin product controls
     - Add-to-cart button
+    - Reviews section in the product details modal:
+        - Shows average rating and review count
+        - Displays list of reviews with username and stars
+        - Review form for authenticated non-admin users
+        - Admins see read-only message; no form shown
 
 - **`cart.html`**
     - Cart contents
@@ -240,7 +263,6 @@ All errors provide clear, user-friendly feedback on the UI.
 - Payment history dashboard
 
 ### 🌟 Advanced Features
-- Product reviews and ratings
 - Discount code system
 
 ### 🎨 UI Improvements
