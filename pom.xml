@@ -5,7 +5,6 @@
     <groupId>com.stackpuz</groupId>
     <artifactId>example-crud</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>example-crud</name>
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
