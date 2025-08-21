@@ -4,6 +4,7 @@ import com.stackpuz.example.backend.entity.Product;
 import com.stackpuz.example.backend.entity.Review;
 import com.stackpuz.example.backend.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -23,4 +24,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     @Query("select count(r.id) from Review r where r.product.id = :productId")
     Long getReviewCount(@Param("productId") int productId);
+
+    @Modifying
+    @Query("delete from Review r where r.product.id = :productId")
+    void deleteByProductId(@Param("productId") int productId);
 }

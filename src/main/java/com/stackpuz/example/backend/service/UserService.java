@@ -140,7 +140,7 @@ public long getUserOrderCount(Long userId) {
             cartRepository.delete(userCart);
         }
 
-        // Delete user's wishlist if it exists (to satisfy FK constraints)
+        // Delete user's wishlist if it exists
         Wishlist wishlist = wishlistRepository.findByUser(user).orElse(null);
         if (wishlist != null) {
             wishlistRepository.delete(wishlist);

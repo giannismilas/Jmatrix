@@ -3,6 +3,8 @@ package com.stackpuz.example.backend.controller;
 import com.stackpuz.example.backend.entity.Product;
 import com.stackpuz.example.backend.service.ProductService;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -51,8 +53,15 @@ public class ProductController {
     @DeleteMapping("/api/{id}")
     @Secured("ROLE_ADMIN")  // Only ADMIN can delete
     @ResponseBody
-    public void deleteProduct(@PathVariable int id) {
-        service.deleteProduct(id);
+    public ResponseEntity<?> deleteProduct(@PathVariable int id) {
+        try {
+            service.deleteProduct(id);
+            return ResponseEntity.noContent().build();
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
     }
 
     @GetMapping("/search")
