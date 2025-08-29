@@ -47,6 +47,7 @@ The EShop Application is a full-featured e-commerce platform designed using Spri
 - Add and remove products
 - Manage product quantities
 - Persistent cart per user
+- Discount codes
 
 ### 📬 Order Processing
 - Create orders from the cart
@@ -261,9 +262,6 @@ All errors provide clear, user-friendly feedback on the UI.
 ### 💳 Payment Integration
 - Stripe / PayPal
 - Payment history dashboard
-
-### 🌟 Advanced Features
-- Discount code system
 
 ### 🎨 UI Improvements
 - Advanced search filters
