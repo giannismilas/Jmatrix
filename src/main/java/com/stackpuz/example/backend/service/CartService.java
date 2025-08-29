@@ -6,6 +6,7 @@ import com.stackpuz.example.backend.entity.Product;
 import com.stackpuz.example.backend.entity.User;
 import com.stackpuz.example.backend.repository.CartRepository;
 import com.stackpuz.example.backend.repository.ProductRepository;
+import com.stackpuz.example.backend.service.DiscountCodeService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -15,10 +16,12 @@ import org.springframework.stereotype.Service;
 public class CartService {
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
+    private final DiscountCodeService discountCodeService;
 
-    public CartService(CartRepository cartRepository, ProductRepository productRepository) {
+    public CartService(CartRepository cartRepository, ProductRepository productRepository, DiscountCodeService discountCodeService) {
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
+        this.discountCodeService = discountCodeService;
     }
 
     public Cart getUserCart(User user) {
@@ -75,6 +78,24 @@ public class CartService {
     public void clearCart(User user) {
         Cart cart = getUserCart(user);
         cart.getItems().clear();
+        // Also clear any applied discount so it does not persist across orders
+        cart.setAppliedDiscountCode(null);
+        cart.setAppliedDiscountPercent(null);
         cartRepository.save(cart);
+    }
+
+    public Cart applyDiscountCode(User user, String code) {
+        Cart cart = getUserCart(user);
+        var dc = discountCodeService.requireValidActive(code);
+        cart.setAppliedDiscountCode(dc.getCode());
+        cart.setAppliedDiscountPercent(dc.getPercent());
+        return cartRepository.save(cart);
+    }
+
+    public Cart clearDiscount(User user) {
+        Cart cart = getUserCart(user);
+        cart.setAppliedDiscountCode(null);
+        cart.setAppliedDiscountPercent(null);
+        return cartRepository.save(cart);
     }
 }

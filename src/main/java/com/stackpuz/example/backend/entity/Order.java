@@ -25,6 +25,10 @@ public class Order {
 
     private double totalPrice;
 
+    // Persist applied discount information for historical accuracy
+    private String discountCode;
+    private Double discountPercent;
+
     @CreationTimestamp
     private LocalDateTime orderDate;
 

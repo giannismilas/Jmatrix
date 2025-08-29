@@ -44,6 +44,8 @@ public class CartController {
         
         Cart cart = cartService.getUserCart(user);
         model.addAttribute("cart", cart);
+        model.addAttribute("subtotal", cart.getSubtotal());
+        model.addAttribute("discountAmount", cart.getDiscountAmount());
         model.addAttribute("totalPrice", cart.getTotalPrice());
         return "cart";
     }
@@ -85,5 +87,41 @@ public class CartController {
         
         cartService.removeFromCart(user, productId);
         return ResponseEntity.ok("Product removed from cart");
+    }
+
+    @PostMapping("/discount/apply")
+    @ResponseBody
+    public ResponseEntity<String> applyDiscount(@RequestParam String code) {
+        User user = getCurrentUser();
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Please log in to apply a discount");
+        }
+        if ("ROLE_ADMIN".equals(user.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Admins cannot use cart functionality");
+        }
+        try {
+            cartService.applyDiscountCode(user, code);
+            return ResponseEntity.ok("Discount applied");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/discount/clear")
+    @ResponseBody
+    public ResponseEntity<String> clearDiscount() {
+        User user = getCurrentUser();
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Please log in to clear discount");
+        }
+        if ("ROLE_ADMIN".equals(user.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Admins cannot use cart functionality");
+        }
+        cartService.clearDiscount(user);
+        return ResponseEntity.ok("Discount cleared");
     }
 }

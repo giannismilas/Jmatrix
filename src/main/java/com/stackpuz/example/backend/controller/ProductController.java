@@ -2,6 +2,7 @@ package com.stackpuz.example.backend.controller;
 
 import com.stackpuz.example.backend.entity.Product;
 import com.stackpuz.example.backend.service.ProductService;
+import com.stackpuz.example.backend.service.DiscountCodeService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +17,11 @@ import java.util.List;
 @RequestMapping("/products")
 public class ProductController {
     private final ProductService service;
+    private final DiscountCodeService discountCodeService;
 
-    public ProductController(ProductService service) {
+    public ProductController(ProductService service, DiscountCodeService discountCodeService) {
         this.service = service;
+        this.discountCodeService = discountCodeService;
     }
 
     @GetMapping
@@ -26,6 +29,8 @@ public class ProductController {
     public String getProducts(Model model) {
         List<Product> products = service.getProducts();
         model.addAttribute("products", products);
+        discountCodeService.getActiveBanner().ifPresent(dc -> model.addAttribute("activeDiscount", dc));
+        model.addAttribute("activeDiscounts", discountCodeService.getAllActive());
         return "products";
     }
 

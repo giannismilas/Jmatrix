@@ -18,9 +18,23 @@ public class Cart {
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> items = new ArrayList<>();
 
-    public double getTotalPrice() {
+    // Discount application (optional, percentage 0..100)
+    private String appliedDiscountCode;
+    private Double appliedDiscountPercent; // null means no discount
+
+    public double getSubtotal() {
         return items.stream()
                 .mapToDouble(item -> item.getProduct().getPrice() * item.getQuantity())
                 .sum();
+    }
+
+    public double getDiscountAmount() {
+        if (appliedDiscountPercent == null || appliedDiscountPercent <= 0) return 0.0;
+        return getSubtotal() * (appliedDiscountPercent / 100.0);
+    }
+
+    public double getTotalPrice() {
+        double total = getSubtotal() - getDiscountAmount();
+        return Math.max(total, 0.0);
     }
 }

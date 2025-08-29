@@ -66,7 +66,22 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Cart Summary</h5>
-                    <p class="card-text">Total Price: $<span th:text="${#numbers.formatDecimal(totalPrice, 1, 2)}">0.00</span></p>
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Discount Code</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="discountInput" th:value="${cart.appliedDiscountCode}" placeholder="Enter code">
+                                <button class="btn btn-outline-success" onclick="applyDiscount()">Apply</button>
+                                <button class="btn btn-outline-secondary" onclick="clearDiscount()" th:disabled="${cart.appliedDiscountCode == null}">Clear</button>
+                            </div>
+                            <div class="form-text" th:if="${cart.appliedDiscountCode != null}">
+                                Applied: <strong th:text="${cart.appliedDiscountCode}">CODE</strong> (<span th:text="${#numbers.formatDecimal(cart.appliedDiscountPercent,1,2)}">0</span>%)
+                            </div>
+                        </div>
+                    </div>
+                    <p class="mb-1">Subtotal: $<span th:text="${#numbers.formatDecimal(subtotal, 1, 2)}">0.00</span></p>
+                    <p class="mb-1">Discount: -$<span th:text="${#numbers.formatDecimal(discountAmount, 1, 2)}">0.00</span></p>
+                    <p class="card-text fw-bold">Total Price: $<span th:text="${#numbers.formatDecimal(totalPrice, 1, 2)}">0.00</span></p>
                     <!-- Add Complete Order button -->
                     <button th:if="${not #lists.isEmpty(cart.items)}" 
                             onclick="completeOrder()" 
@@ -113,6 +128,32 @@ function completeOrder() {
         console.error('Error:', error);
         alert('Error completing order. Please try again.');
     });
+}
+
+function applyDiscount() {
+    const code = document.getElementById('discountInput').value.trim();
+    if (!code) {
+        alert('Please enter a discount code');
+        return;
+    }
+    fetch(`/cart/discount/apply?code=${encodeURIComponent(code)}`, {
+        method: 'POST'
+    })
+    .then(async resp => {
+        if (!resp.ok) {
+            const text = await resp.text();
+            throw new Error(text || 'Failed to apply discount');
+        }
+        return resp.text();
+    })
+    .then(() => window.location.reload())
+    .catch(err => alert(err.message));
+}
+
+function clearDiscount() {
+    fetch('/cart/discount/clear', { method: 'DELETE' })
+    .then(() => window.location.reload())
+    .catch(err => alert('Failed to clear discount'));
 }
     </script>
 </body>

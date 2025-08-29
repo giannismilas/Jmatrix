@@ -38,6 +38,9 @@ public class OrderService {
         Order order = new Order();
         order.setUser(user);
         order.setTotalPrice(cart.getTotalPrice());
+        // Carry over discount info for record
+        order.setDiscountCode(cart.getAppliedDiscountCode());
+        order.setDiscountPercent(cart.getAppliedDiscountPercent());
 
         // Convert cart items to order items
         List<OrderItem> orderItems = cart.getItems().stream()
