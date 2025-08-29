@@ -1,4 +1,15 @@
 # EShop Application
+### 🏷️ Discount Codes
+
+| Method | Endpoint                         | Description                              | Access     |
+|--------|-----------------------------------|------------------------------------------|------------|
+| POST   | `/discount-codes/api`             | Create discount code `{code, percent, expiresAt?}` | ADMIN only |
+| GET    | `/discount-codes/api/active`      | Get the most recent active code           | Public     |
+| DELETE | `/discount-codes/api/{id}`        | Delete a discount code by id              | ADMIN only |
+
+Notes:
+- `expiresAt` is an ISO local datetime string, e.g. `2025-08-30T12:00`.
+- Expired codes are auto-removed hourly by a scheduler; only currently active codes are shown in the UI.
 
 A Spring Boot-based e-commerce platform with full shopping functionality including user authentication, product management, cart system, and order processing. Supports two user roles: **regular customers** and **administrators**.
 
@@ -48,6 +59,11 @@ The EShop Application is a full-featured e-commerce platform designed using Spri
 - Manage product quantities
 - Persistent cart per user
 - Discount codes
+  - Admins can create discount codes with a percentage and optional expiration
+  - Admins can delete discount codes
+  - Customers can apply/clear discount codes in the cart
+  - Expiration is shown to customers; expired codes are automatically cleaned up
+  - Cart discounts are cleared after a successful order so they don't persist to the next cart
 
 ### 📬 Order Processing
 - Create orders from the cart
@@ -68,6 +84,7 @@ The EShop Application is a full-featured e-commerce platform designed using Spri
 - Spring Security
 - Spring Data JPA
 - Thymeleaf
+- Spring Scheduling (automatic cleanup of expired discount codes)
 
 ### Frontend
 - Bootstrap 5
@@ -137,6 +154,7 @@ There is a test database.sql file that imports some products that were used for 
 - **Order** – Records completed orders
 - **CartItem / OrderItem** – Itemized product references in carts and orders
 - **Review** – User review for a product with fields: rating (1–5), comment, timestamps; unique constraint `(user_id, product_id)` ensures 1 review per user per product
+- **DiscountCode** – Admin-defined discount codes: `code` (unique), `percent` (1–100], `active` flag, `startsAt` (optional), `expiresAt` (optional). Expired codes are auto-deleted by a scheduled task.
 
 ---
 
@@ -178,6 +196,8 @@ There is a test database.sql file that imports some products that were used for 
 | GET    | `/cart`                    | View cart           | USER only |
 | POST   | `/cart/add/{productId}`    | Add to cart         | USER only |
 | DELETE | `/cart/remove/{productId}` | Remove from cart    | USER only |
+| POST   | `/cart/discount/apply?code=CODE` | Apply discount code to current cart | USER only |
+| DELETE | `/cart/discount/clear`     | Clear discount code from current cart | USER only |
 
 ### 🧾 Orders
 
@@ -200,6 +220,7 @@ There is a test database.sql file that imports some products that were used for 
 - **Restrictions:**
     - Admins cannot use the shopping cart
     - Admins cannot create, edit, or delete reviews (read-only)
+    - Only Admins can create/delete discount codes
     - Users cannot modify products
     - All endpoints are secured appropriately
 
@@ -213,6 +234,10 @@ There is a test database.sql file that imports some products that were used for 
     - Product grid with search
     - Admin product controls
     - Add-to-cart button
+    - Discount codes section:
+        - Shows all currently active discount codes with percentage and expiration
+        - Admin-only modal to create codes (code, percent, optional expiration)
+        - Admin can delete codes from the list
     - Reviews section in the product details modal:
         - Shows average rating and review count
         - Displays list of reviews with username and stars
@@ -223,6 +248,8 @@ There is a test database.sql file that imports some products that were used for 
     - Cart contents
     - Remove items
     - Checkout functionality
+    - Discount code input to apply or clear a code
+    - Displays subtotal, discount amount, and total after discount
 
 - **`orders.html`**
     - Order history
@@ -285,3 +312,7 @@ Available Unit Tests for the controllers and services used in the development in
 - UserControllerTest
 - CartServiceTest
 - ProductServiceTest
+
+Planned tests:
+- DiscountCodeService validation and expiration handling
+- CartService discount application and clearing on order
